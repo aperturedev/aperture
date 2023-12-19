@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:experimental
+FROM golang:1.21-alpine AS base
+
+ENV CGO_ENABLED=0
+RUN apk --update --no-cache add tzdata git
+
+WORKDIR /src/app
+VOLUME /src/app
+
+# -----------------------------------------------------------------------------
+
+FROM base AS builder
+
+COPY ./go.mod ./go.sum ./app/
+
+# Download dependencies
+RUN --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
+  cd ./app && go mod download
+
+# Copy the source code
+COPY ./library ./library
+COPY ./ ./app
+
+# Build & compress services
+RUN --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
+  cd ./app && go build -ldflags "-w -s" -a -o /usr/local/bin/app *.go
+
+# -----------------------------------------------------------------------------
+
+FROM base AS dev
+
+RUN go install github.com/cespare/reflex@latest
+
+CMD reflex -r '\.go$' --only-files -s -- sh -c 'go run cmd/aperture/main.go'
+
+# -----------------------------------------------------------------------------
+
+FROM base AS debug
+
+# Install go tools
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.7.3
+
+# Define command
+CMD cd ./services/data && dlv debug --output=/service --listen=:2345 --headless --api-version=2 --accept-multiclient
+
+# -----------------------------------------------------------------------------
+
+
+
+FROM alpine:3.11.3 AS prod
+
+RUN apk add --update --no-cache tzdata ca-certificates
+
+COPY --from=builder /usr/local/bin/service /usr/local/bin/service
+
+ENTRYPOINT ["/usr/local/bin/service"]

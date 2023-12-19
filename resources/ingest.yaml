@@ -1,0 +1,11 @@
+input:
+  label: gen
+  generate:
+    mapping: 'root = {"created_at": "bar", "id": uuid_v4(), "offset": 5, "stream_id": "foo-bar-baz", "data": "foo bar baz"}'
+    interval: 2s
+output:
+  label: event_store
+  nats_jetstream:
+    urls:
+      - nats://nats:4222
+    subject: ingest.events

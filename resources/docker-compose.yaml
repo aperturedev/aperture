@@ -1,0 +1,247 @@
+version: "3.8"
+
+name: aperture # TODO - append app id
+services:
+  aperture:
+    build:
+      context: /Users/anes/projects/aperture-go/
+      dockerfile: /Users/anes/projects/aperture-go/Dockerfile.aperture
+      target: dev
+    volumes:
+      - type: bind
+        source: ../
+        target: /src/app
+    networks:
+      - private
+      - public
+    depends_on:
+      - nats
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=public"
+#      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/dashboard"
+      - "traefik.http.routers.aperture.entrypoints=web"
+#      - "traefik.http.routers.aperture.middlewares=api-stripprefix@docker"
+      - "traefik.http.routers.aperture.rule=Host(`aperture.localhost`)"
+      - "traefik.http.services.aperture.loadbalancer.server.port=8080"
+
+  projection_agent:
+    build:
+      context: /Users/anes/projects/aperture-go/
+      dockerfile: /Users/anes/projects/aperture-go/Dockerfile.agent
+      target: dev
+    volumes:
+      - type: bind
+        source: ../
+        target: /src/app
+    networks:
+      - private
+    depends_on:
+      - aperture
+    restart: always
+
+  ingest:
+    environment:
+      TZ: Europe/Berlin
+    image: jeffail/benthos
+    volumes:
+      - type: bind
+        source: ingest.yaml
+        target: /benthos.yaml
+        read_only: true
+    restart: unless-stopped
+    networks:
+      - private
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 100m
+    depends_on:
+      - aperture
+
+  nats:
+    environment:
+      TZ: Europe/Berlin
+    image: nats:2.10.7-alpine3.18
+    command:
+      - "-js"
+      - "-c"
+      - "/etc/nats/js.conf"
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 100m
+    ports:
+      - "4222:4222"
+    networks:
+      - private
+    restart: always
+    volumes:
+      - type: bind
+        source: js.conf
+        target: /etc/nats/js.conf
+        read_only: true
+#      - type: volume
+#        source: nats_data
+#        target: /var/lib/nats
+#        volume: {}
+
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.network=public"
+      - "--providers.docker.exposedbydefault=false"
+#      - "--entrypoints.web.address=:4438"
+      - "--entrypoints.web.address=:80"
+    ports:
+#      - "4438:4438"
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - public
+
+#  traefik:
+#    environment:
+#      TZ: Europe/Berlin
+#    image: traefik:2.1.3
+#    logging:
+#      driver: json-file
+#      options:
+#        max-file: "1"
+#        max-size: 100m
+#    networks:
+#      public:
+#        aliases:
+#          - aperture.localhost
+#    ports:
+#      - mode: ingress
+#        target: 80
+#        published: "4438"
+#        protocol: tcp
+##      - mode: ingress
+##        target: 433
+##        published: "443"
+##        protocol: tcp
+##      - mode: ingress
+##        target: 8080
+##        published: "8080"
+##        protocol: tcp
+#    restart: unless-stopped
+#    volumes:
+#      - type: bind
+#        source: traefik.yaml
+#        target: /etc/traefik/traefik.yml
+#        read_only: true
+#        bind:
+#          create_host_path: true
+#      - type: bind
+#        source: /var/run/docker.sock
+#        target: /var/run/docker.sock
+#        bind:
+#          create_host_path: true
+
+#  aperture:
+#    build:
+#      context: /Users/anes/dqs/mydqs
+#      dockerfile: ./services/api/Dockerfile
+#      target: local
+#    environment:
+#      FOO: bar
+#    labels:
+#      filebeat.enable: "true"
+#      filebeat.message: json
+#      traefik.docker.network: public
+#      traefik.enable: "true"
+#      traefik.http.middlewares.api-stripprefix.stripprefix.prefixes: /api
+#      traefik.http.routers.api.entrypoints: web
+#      traefik.http.routers.api.middlewares: api-stripprefix@docker
+#      traefik.http.routers.api.rule: Host(`mydqs.docker.localhost`) && PathPrefix(`/api`)
+#      traefik.http.services.api.loadbalancer.server.port: "80"
+#    logging:
+#      driver: json-file
+#      options:
+#        max-file: "1"
+#        max-size: 100m
+#    networks:
+#      private: null
+#      public: null
+#    restart: "always"
+#    volumes:
+#      - type: bind
+#        source: /Users/anes/dqs/mydqs/library
+#        target: /src/app/library
+#        bind:
+#          create_host_path: true
+#      - type: bind
+#        source: /Users/anes/dqs/mydqs/services/api
+#        target: /src/app/services/api
+#        bind:
+#          create_host_path: true
+#      - type: bind
+#        source: /Users/anes/go/pkg/mod
+#        target: /go/pkg/mod
+#        bind:
+#          create_host_path: true
+#  mysql:
+#    command:
+#      - --wait_timeout=840
+#      - --query_cache_limit=2M
+#      - --query_cache_min_res_unit=2K
+#      - --query_cache_size=64M
+#      - --max_allowed_packet=256M
+#      - --innodb_adaptive_hash_index
+#      - --character-set-server=utf8mb4
+#      - --collation-server=utf8mb4_unicode_ci
+#      - --innodb_buffer_pool_size=8G
+#    environment:
+#      MYSQL_DATABASE: mydqs
+#      MYSQL_PASSWORD: mydqs
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_USER: mydqs
+#      TZ: Europe/Berlin
+#    image: mariadb:10.4.11
+#    logging:
+#      driver: json-file
+#      options:
+#        max-file: "1"
+#        max-size: 100m
+#    networks:
+#      private: null
+#    ports:
+#      - mode: ingress
+#        target: 3306
+#        published: "3306"
+#        protocol: tcp
+#    restart: unless-stopped
+#    volumes:
+#      - type: volume
+#        source: mysql_data
+#        target: /var/lib/mysql
+#        volume: {}
+#      - type: bind
+#        source: /Users/anes/dqs/mydqs/services/mysql/bin
+#        target: /usr/local/service/bin
+#        read_only: true
+#        bind:
+#          create_host_path: true
+#      - type: bind
+#        source: /Users/anes/dqs/mydqs/services/mysql/migrations
+#        target: /usr/local/service/migrations
+#        read_only: true
+#        bind:
+#          create_host_path: true
+
+networks:
+  private:
+  public:
+volumes:
+  nats_data:
+    driver: local

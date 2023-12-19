@@ -1,0 +1,48 @@
+body {
+    font-family: 'Jockey One', sans-serif;
+}
+
+.khand, p {
+    font-family: 'Khand', sans-serif;
+    font-weight: 300;
+}
+
+.khand-400 {
+    font-family: 'Khand', sans-serif;
+    font-weight: 400;
+}
+
+.khand-500 {
+    font-family: 'Khand', sans-serif;
+    font-weight: 500;
+}
+
+button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.projection-item:not(:last-child) {
+    border-bottom: 1px solid darkgray;
+}
+
+.projection-actions > * {
+    margin-left: 1rem;
+}
+
+.main-nav {
+    max-width: 220px;
+}
+
+.btn-icon-only {
+    font-size: 24px;
+}
+
+.projection-progress {
+    text-align: right;
+    width: 100px;
+}
+
+.nav-item:has(> a.active) {
+    background-color: black !important;
+}
