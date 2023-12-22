@@ -17,7 +17,7 @@
         {{ end }}
 
         <span class="khand-500 projection-progress">
-            <span class="text-danger">34</span> / <span class="text-success">3700</span>
+            <span class="text-danger">{{ .CurrentOffset }}</span> / <span class="text-success">3700</span>
         </span>
         <button class="btn btn-light btn-icon-only" type="button">
             <i class="ti ti-code text-dark"></i>

@@ -157,7 +157,7 @@ func analyze(a *app.App) error {
 		return err
 	}
 
-	return os.WriteFile(fmt.Sprintf(".aperture/%s.cfg", a.NetConfig.ProjectName), buf.Bytes(), 0755)
+	return os.WriteFile(".aperture/projections.cfg", buf.Bytes(), 0755)
 }
 
 type model struct {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/aperturedev/aperture/internal/app"
 	"github.com/aperturedev/aperture/internal/httpecho"
 	"github.com/aperturedev/aperture/internal/hyper"
 	"github.com/labstack/echo/v4"
@@ -31,7 +32,7 @@ func main() {
 
 	e.Use(middleware.Logger())
 
-	httpecho.RegisterDashboardServer(e)
+	httpecho.RegisterDashboardServer(e, app.NewProjectionService())
 
 	log.Fatal(e.Start(":8080"))
 }

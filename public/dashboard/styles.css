@@ -22,7 +22,8 @@ button:focus {
     box-shadow: none !important;
 }
 
-.projection-item:not(:last-child) {
+/*.projection-item:not(:last-child) {*/
+.projection-item {
     border-bottom: 1px solid darkgray;
 }
 

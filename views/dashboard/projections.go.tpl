@@ -76,7 +76,9 @@
                 <div class="row">
                     <div class="col ">
                         {{ range .Data.projections }}
-                            {{ template "partial/projections/projection_item.go.tpl" . }}
+                            <div hx-get="/projection/{{ .ID }}" hx-swap="innerHTML" hx-trigger="every 2s">
+                            {{ template "component/projections/projection_item.go.tpl" . }}
+                            </div>
                         {{ end }}
                     </div>
                 </div>
