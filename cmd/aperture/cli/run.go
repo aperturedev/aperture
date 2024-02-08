@@ -74,6 +74,11 @@ var runCmd = &cobra.Command{
 
 		fmt.Println("> Done!")
 
+		// TODO
+		// Create new run config eg. docker-compose or helm - depending on implementation
+		// Save it into .aperture/ also (at least in case of docker-compose)
+		// Run it
+
 		fmt.Println()
 
 		fmt.Println("> Aperture running on http://aperture.localhost")
@@ -146,7 +151,10 @@ func build(a *app.App) error {
 }
 
 func analyze(a *app.App) error {
-	cmd := exec.Command("/Users/anes/projects/Aperture/Aperture.Cli/bin/Debug/net8.0/Aperture.Cli")
+	// Run from Aperture solution:
+	// docker build -t aperture.dev/net-scanner:latest .
+
+	cmd := exec.Command("docker", "run", "-v", ".:/opt/app", "aperture.dev/net-scanner")
 
 	buf := bytes.NewBuffer(nil)
 
@@ -168,8 +176,8 @@ type model struct {
 
 func initialModel() *model {
 	return &model{
-		// Our to-do list is a grocery list
-		choices: []string{"Aperture.Core", "Aperture.Tests", "Aperture.Projections"},
+		// choices: []string{"Aperture.Core", "Aperture.Tests", "Aperture.Projections"},
+		choices: []string{},
 	}
 }
 

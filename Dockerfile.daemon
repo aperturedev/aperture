@@ -33,7 +33,7 @@ FROM base AS dev
 
 RUN go install github.com/cespare/reflex@latest
 
-CMD reflex -r '\.go$' --only-files -s -- sh -c 'go run cmd/aperture/main.go'
+CMD reflex -r '\.go$' --only-files -s -- sh -c 'go run cmd/daemon/main.go init-nats'
 
 # -----------------------------------------------------------------------------
 

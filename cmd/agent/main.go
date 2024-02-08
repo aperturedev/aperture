@@ -5,9 +5,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"log"
 )
 
 func main() {
@@ -82,10 +83,16 @@ func project(ctx context.Context, js jetstream.JetStream) error {
 			return
 		}
 
+		// TODO
+
+		// TODO - grpc client to the runner eg. .net
+		// Define the rpc contract here in this repo
+
 		fmt.Println("Handling event: ", string(msg.Data()))
 
 		// TODO - If message handling fails reset offset from kv
 		// Is there a better strategy here in order to prevent duplicates ?
+		// Give user a few configurable strategies for offset handling
 
 		// TODO - Handle kill signals from ctx per message so we don't end up in funny state between
 		// message handling and offset saving

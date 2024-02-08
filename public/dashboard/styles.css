@@ -44,6 +44,7 @@ button:focus {
     width: 100px;
 }
 
-.nav-item:has(> a.active) {
-    background-color: black !important;
+.main-nav .nav-item:has(> a.active) {
+    background-color: #0f0f0f !important;
+    border-radius: 4px;
 }
